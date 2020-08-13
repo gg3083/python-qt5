@@ -9,6 +9,18 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow
+
+
+class MyContainerWidows(QMainWindow):
+    def __init__(self):
+        super(MyContainerWidows, self).__init__()
+        self.ui = Ui_ContainerWindow()
+        self.ui.setupUi(self)
+
+    def open(self):
+        print('cont-show')
+        self.show()
 
 
 class Ui_ContainerWindow(object):
@@ -118,3 +130,4 @@ class Ui_ContainerWindow(object):
         self.label_10.setText(_translate("ContainerWindow", "地址"))
         self.pushButton_3.setText(_translate("ContainerWindow", "切换账号"))
         self.pushButton_4.setText(_translate("ContainerWindow", "ip切换"))
+
