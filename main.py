@@ -380,9 +380,17 @@ class Ui_ContainerWindow(object):
         personList = getPersonInfo(cookie, listData)
         for item in personList:
             self.tableWidget.setItem(item['index'], 5, QTableWidgetItem(item['person']))
-        value = self.progressBar.value() + ((len(listData)/length)*10000)//100
+        i = ((len(listData) / length) * 10000)
+        if i % 10 < 5 :
+            value = self.progressBar.value() + i//100 + 1
+            if value > 90:
+                value = 100
+        else:
+            value = self.progressBar.value() + i//100
+            if value > 90:
+                value = 100
         self.progressBar.setProperty("value", value)
-        print(value)
+        print('w',len(listData),length,value)
 
     def exportExcel(self):
         rowNum = self.tableWidget.rowCount()
