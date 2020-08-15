@@ -36,13 +36,11 @@ def getLoginInfo(tboxAccount, tboxPassword, token, cookie):
         'tboxPassword': tboxPassword,
         '__RequestVerificationToken': token,
     }
-    print(headers)
     session = requests.session()
     resBody = session.post(url, requestParam, headers=headers)
     # print(resBody)
     # print(resBody.text)
     newCookie = requests.utils.dict_from_cookiejar(session.cookies)
-    print(newCookie, type(newCookie))
     if newCookie:
         for i in newCookie:
             cookie = cookie + '; ' + i + '=' + newCookie[i]
@@ -60,6 +58,5 @@ def login(name, password):
         if len(sumCookie) > 0:
             sumCookie = sumCookie + ';'
         sumCookie = sumCookie + i + '=' + indexCookie[i]
-    print(sumCookie, token)
     req_cookie = getLoginInfo(name, password, token, sumCookie)
     return req_cookie

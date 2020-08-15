@@ -121,12 +121,10 @@ class Ui_IndexWindow(object):
             return
         self.label_4.setText(_translate("IndexWindow", ""))
         self.label_5.setText(_translate("IndexWindow", ""))
-        print(name, password)
         cookie = login(name, password)
         if len(cookie) > 0:
             global REQUEST_COOKIE
             REQUEST_COOKIE = cookie
-            print("登录后的全局cookie为:{}", REQUEST_COOKIE)
             ui_hello.show()
             ui_hello.ui.setCountry()
             MainWindow.close()
@@ -285,9 +283,7 @@ class Ui_ContainerWindow(object):
         # cookie = '__RequestVerificationToken=r3C7PlD_eIf0-QzESJyJM4C3hlScMIM5Dp0VA0jNIdy14D8MbsZ3ye7nNeWy5DnGsym20A2; _safe_token_=49E6D91D60E8B75893028E43A2B7DB77D68106626E9ED6FAF1401B99A03AB7F266EC5802FF2EC3AA24BF97CEEA50A1EFEF7CFEF51A55645F18286944C678935B; lsxx=01B8515C797DA1B830BCC72BF7D47613F33DAAC25177BB040150C5982FB8156F9BD023A3F6CFE043C0B24B8AFFFAB770A53B63A65AF77B73926D0BF5EF5F1266FB4445EBB5324AE929670A26A04F4FB366DF0AC1F9851C38A375B9A44DF1396DC5EE4482633088D8C6FBD55FE2794646272E9DEF67CF4C3FA57AB4E38FD01C15B912AF0EE88AF720767AFF3F'
         global REQUEST_COOKIE
         cookie = REQUEST_COOKIE
-        print("请求的cookie为:{}", cookie)
         countryList = getCountryInfo(cookie)
-        print(len(countryList))
         if len(countryList):
             self.comboBox.addItems(countryList)
         else:
@@ -309,7 +305,6 @@ class Ui_ContainerWindow(object):
         if len(country) <= 0:
             QMessageBox.warning(self.centralwidget, "警告", "国家不能为空！", QMessageBox.Yes)
             return
-        print(searchKey, country)
         if len(country.split("—")) != 3:
             QMessageBox.warning(self.centralwidget, "警告", "选择的国家格式有误！", QMessageBox.Yes)
             return
@@ -374,12 +369,10 @@ class Ui_ContainerWindow(object):
                 # hasAlert = False
                 QMessageBox.warning(self.centralwidget, "警告", "所有数据查询完毕", QMessageBox.Yes)
                 break
-            print(len(threading.enumerate()))
 
     def getPerson(self, cookie, listData):
         personList = getPersonInfo(cookie, listData)
         for item in personList:
-            print(item['index'], QTableWidgetItem(item['person']))
             self.tableWidget.setItem(item['index'], 5, QTableWidgetItem(item['person']))
 
 
@@ -405,9 +398,11 @@ class Ui_ContainerWindow(object):
                 return
             excelList.append(param)
         fileName = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_kjs.xls"
-        file_path = QFileDialog.getSaveFileName(self.centralwidget, "save file", fileName, os.path.expanduser('~'))
-
-        writeExcel(excelList, file_path[0])
+        file_path, ok = QFileDialog.getSaveFileName(self.centralwidget, "save file", fileName, os.path.expanduser('~'))
+        if ok:
+            writeExcel(excelList, file_path[0])
+        else:
+            QMessageBox.warning(self.centralwidget, "警告", "取消导出！", QMessageBox.Yes)
 
 if __name__ == '__main__':
 

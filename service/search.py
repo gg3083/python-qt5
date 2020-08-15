@@ -11,7 +11,6 @@ from model.ExcelParam import ExcelParam
 def get_base_data(url, pageNo, headers, list):
     res = requests.get(url + str(pageNo), headers=headers)
     json_res = json.loads(res.text)
-    print(json_res)
     try:
         json_data = json_res["Data"]
         json_count = json_res["Count"]
@@ -63,7 +62,6 @@ def getPersonInfo(cookie, list):
                 person = person.strip(" ").strip("\"").replace('\"', '').replace(",", "")
         except Exception as e:
             print(e)
-        print("当前数据的id:{}",item.id)
         personItem['index'] = item.id
         personItem['person'] = person
         personList.append(personItem)
@@ -124,9 +122,5 @@ def  executeSearch(searchKey, countryCode, cookie):
         # if pageNo > 2:
         if pageNo > pageMax/10 + 1:
             break
-
-    print(len(list))
     # list = get_person_info(detailUrl, headers, list)
-
-    print("耗时:",  (datetime.datetime.now().timestamp() - time))
     return list
