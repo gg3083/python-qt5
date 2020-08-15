@@ -2,9 +2,12 @@ import _thread
 import datetime
 import os
 import sys
+import threading
+import time
+from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QHeaderView, QTableWidget, \
-    QFileDialog
-from PyQt5 import QtCore, QtGui, QtWidgets, Qt
+    QFileDialog, QComboBox, QCompleter
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from model.ExcelParam import ExcelParam
 from service.country import getCountryInfo
@@ -132,6 +135,50 @@ class Ui_IndexWindow(object):
             msg_box.warning(self.centralwidget, "警告", "用户名或密码错误！", msg_box.Yes)
             self.lineEdit.setFocus()
 
+# 搜索算法
+class ExtendedComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super(ExtendedComboBox, self).__init__(parent)
+
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setEditable(True)
+
+        # add a filter model to filter matching items
+        self.pFilterModel = QSortFilterProxyModel(self)
+        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.pFilterModel.setSourceModel(self.model())
+
+        # add a completer, which uses the filter model
+        self.completer = QCompleter(self.pFilterModel, self)
+        # always show all (filtered) completions
+        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        self.setCompleter(self.completer)
+
+        # connect signals
+        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)
+        self.completer.activated.connect(self.on_completer_activated)
+
+
+    # on selection of an item from the completer, select the corresponding item from combobox
+    def on_completer_activated(self, text):
+        if text:
+            index = self.findText(text)
+            self.setCurrentIndex(index)
+            self.activated[str].emit(self.itemText(index))
+
+
+    # on model change, update the models of the filter and completer as well
+    def setModel(self, model):
+        super(ExtendedComboBox, self).setModel(model)
+        self.pFilterModel.setSourceModel(model)
+        self.completer.setModel(self.pFilterModel)
+
+
+    # on model column change, update the model column of the filter and completer as well
+    def setModelColumn(self, column):
+        self.completer.setCompletionColumn(column)
+        self.pFilterModel.setFilterKeyColumn(column)
+        super(ExtendedComboBox, self).setModelColumn(column)
 
 
 class Ui_ContainerWindow(object):
@@ -196,7 +243,8 @@ class Ui_ContainerWindow(object):
         font.setPointSize(14)
         self.pushButton_3.setFont(font)
         self.pushButton_3.setObjectName("pushButton_3")
-        self.comboBox = QtWidgets.QComboBox(self.centralwidget)
+
+        self.comboBox = ExtendedComboBox(self.centralwidget)
         self.comboBox.setGeometry(QtCore.QRect(420, 20, 341, 31))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -206,6 +254,7 @@ class Ui_ContainerWindow(object):
         self.comboBox.setIconSize(QtCore.QSize(20, 20))
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
+
         ContainerWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(ContainerWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1200, 22))
@@ -268,7 +317,7 @@ class Ui_ContainerWindow(object):
         global REQUEST_COOKIE
         listData = executeSearch(searchKey, countryCode, REQUEST_COOKIE)
         if len(listData) == 0:
-            QMessageBox.warning(self.centralwidget, "警告", "该关键词查询不到数据,请更换关键词后再试！", QMessageBox.Yes)
+            QMessageBox.warning(self.centralwidget, "警告", "该关键词查询不到数据,请更换关键词后再试!", QMessageBox.Yes)
             return
         self.tableWidget.setRowCount(len(listData))
 
@@ -286,24 +335,46 @@ class Ui_ContainerWindow(object):
         # 第一次显示10个
         # 如果所有数据大于20 第二次显示所有数据减10除以2 否则就直接显示剩余的
         # 第三次显示剩余
+
         if len(listData) > 10:
             try:
-                _thread.start_new_thread(self.getPerson, (REQUEST_COOKIE, listData[:10]))
+                t1 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[:10]))
+                t1.start()
                 if len(listData) < 20:
-                    _thread.start_new_thread(self.getPerson, (REQUEST_COOKIE, listData[10:]))
+                    t2 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:]))
+                    t2.start()
                 else:
                     second = (len(listData) - 10) // 2 + 10
-                    _thread.start_new_thread(self.getPerson, (REQUEST_COOKIE, listData[10:second]))
-                    _thread.start_new_thread(self.getPerson, (REQUEST_COOKIE, listData[second:]))
+                    t3 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:second]))
+                    t4 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[second:]))
+                    t3.start()
+                    t4.start()
             except:
                 print("Error: 无法启动线程")
+                _thread.exit()
             print("开始获取联系人1")
         else:
             try:
-                _thread.start_new_thread(self.getPerson, (REQUEST_COOKIE, listData))
+                t5 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData))
+                t5.start()
             except:
                 print("Error: 无法启动线程")
+                _thread.exit()
             print("开始获取联系人2")
+        # t6 = threading.Thread(target=self.getCurrentThread, args=())
+        #
+        # t6.start()
+        # self.getCurrentThread()
+
+    def getCurrentThread(self):
+        while True:
+            time.sleep(5)
+            # hasAlert = True
+            if len(threading.enumerate()) <= 2:
+                # hasAlert = False
+                QMessageBox.warning(self.centralwidget, "警告", "所有数据查询完毕", QMessageBox.Yes)
+                break
+            print(len(threading.enumerate()))
 
     def getPerson(self, cookie, listData):
         personList = getPersonInfo(cookie, listData)
@@ -329,6 +400,9 @@ class Ui_ContainerWindow(object):
             param.person = self.tableWidget.item(i, 5).text()
             param.phone = self.tableWidget.item(i, 6).text()
             param.address = self.tableWidget.item(i, 7).text()
+            if self.tableWidget.item(i, 5).text() == '加载中...':
+                QMessageBox.warning(self.centralwidget, "警告", "联系人还未加载完成,禁止导出！", QMessageBox.Yes)
+                return
             excelList.append(param)
         fileName = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_kjs.xls"
         file_path = QFileDialog.getSaveFileName(self.centralwidget, "save file", fileName, os.path.expanduser('~'))

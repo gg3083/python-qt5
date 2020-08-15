@@ -11,27 +11,30 @@ from model.ExcelParam import ExcelParam
 def get_base_data(url, pageNo, headers, list):
     res = requests.get(url + str(pageNo), headers=headers)
     json_res = json.loads(res.text)
-    json_data = json_res["Data"]
-    json_count = json_res["Count"]
-    print(json_data)
-    if json_data is None:
+    print(json_res)
+    try:
+        json_data = json_res["Data"]
+        json_count = json_res["Count"]
+        if json_data is None:
+            return 0
+        i = 0
+        for item in json_data:
+            param = ExcelParam()
+            param.id = i + (pageNo - 1) * 10
+            param.country = item['CountryName']
+            param.company = item['PrimaryName']
+            param.domain = item['Domian']
+            param.person = '加载中...'
+            param.phone = item['TelephoneNumber']
+            param.address = item['Address']
+            param.sale = item['YearlyRevenue']
+            param.dnbNumber = item['DnbNumber']
+            list.append(param)
+            i = i + 1
+        return json_count
+    except:
         return 0
-    i = 0
-    for item in json_data:
-        param = ExcelParam()
-        param.id = i + (pageNo - 1) * 10
-        param.country = item['CountryName']
-        param.company = item['PrimaryName']
-        param.domain = item['Domian']
-        param.person = '加载中...'
-        param.phone = item['TelephoneNumber']
-        param.address = item['Address']
-        param.sale = item['YearlyRevenue']
-        param.dnbNumber = item['DnbNumber']
-        list.append(param)
-        i = i + 1
 
-    return json_count
 
 def getPersonInfo(cookie, list):
 
