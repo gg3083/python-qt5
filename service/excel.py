@@ -13,22 +13,30 @@ from model.ExcelParam import ExcelParam
 def createSheet(fileName):
     exists = os.path.exists( fileName)
     if not exists:
-        if getattr(sys, 'frozen', False):
-            application_path = os.path.dirname(sys.executable)
-        elif __file__:
-            application_path = os.path.dirname(__file__)
-        templatePath = os.path.join(application_path, '../template.xlsx')
-        print(templatePath)
-        workbook = xlrd.open_workbook(templatePath)
-        sheet1 = workbook.sheet_by_name('Sheet1')
+        # if getattr(sys, 'frozen', False):
+        #     application_path = os.path.dirname(sys.executable)
+        # elif __file__:
+        #     application_path = os.path.dirname(__file__)
+        # templatePath = os.path.join(application_path, '../template.xlsx')
+        # print(templatePath)
+        # workbook = xlrd.open_workbook(templatePath)
+        # sheet1 = workbook.sheet_by_name('Sheet1')
         wb = xlwt.Workbook()
         ws = wb.add_sheet('Sheet1')
-        titles = sheet1.row_values(0)
-        for i in range(0, len(titles)):
-            ws.write(0, i, titles[i])
+        # titles = sheet1.row_values(0)
+        # for i in range(0, len(titles)):
+            # 添加标题
+        ws.write(0, 0, '序号')
+        ws.write(0, 1, '国家')
+        ws.write(0, 2, '公司名称')
+        ws.write(0, 3, '网址')
+        ws.write(0, 4, '销售额(年)')
+        ws.write(0, 5, '联系人')
+        ws.write(0, 6, '电话/手机')
+        ws.write(0, 7, '地址')
         wb.save(fileName)
     else:
-        print("1存在了")
+        print("目标xlsx已经存在了")
 
 def writeSheet(list, fileName):
     workbook = xlrd.open_workbook(fileName)
@@ -38,7 +46,7 @@ def writeSheet(list, fileName):
     ws = excel.get_sheet(0)  # 获取要操作的sheet
     # print(sheet1.row_values(0))
     for i in range(0, len(list)):
-        ws.write(row+i, 0, list[i].id)
+        ws.write(row+i, 0, list[i].id + 1)
         ws.write(row+i, 1, list[i].country)
         ws.write(row+i, 2, list[i].company)
         ws.write(row+i, 3, list[i].domain)
