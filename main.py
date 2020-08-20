@@ -316,7 +316,6 @@ class Ui_ContainerWindow(object):
             return
         countryCode = country.split("—")[2]
         global REQUEST_COOKIE
-        # self.progressBar.setProperty("value", 0)
 
         listData = executeSearch(searchKey, countryCode, REQUEST_COOKIE)
         if len(listData) <= 0:
@@ -347,66 +346,6 @@ class Ui_ContainerWindow(object):
             self.tableWidget.setItem(i, 6, QTableWidgetItem(resList[i].phone))
             self.tableWidget.setItem(i, 7, QTableWidgetItem(resList[i].address))
 
-
-        # # 分三个线程去显示数据
-        # # 第一次显示10个
-        # # 如果所有数据大于20 第二次显示所有数据减10除以2 否则就直接显示剩余的
-        # # 第三次显示剩余
-        #
-        # if len(listData) > 10:
-        #     try:
-        #         t1 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[:10], len(listData)))
-        #         t1.start()
-        #         if len(listData) < 20:
-        #             t2 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:], len(listData)))
-        #             t2.start()
-        #         else:
-        #             second = (len(listData) - 10) // 2 + 10
-        #             t3 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:second],len(listData)))
-        #             t4 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[second:], len(listData)))
-        #             t3.start()
-        #             t4.start()
-        #     except:
-        #         print("Error: 无法启动线程")
-        #         _thread.exit()
-        #     print("开始获取联系人1")
-        # else:
-        #     try:
-        #         t5 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData, len(listData)))
-        #         t5.start()
-        #     except:
-        #         print("Error: 无法启动线程")
-        #         _thread.exit()
-        #     print("开始获取联系人2")
-        # t6 = threading.Thread(target=self.getCurrentThread, args=())
-        #
-        # t6.start()
-        # self.getCurrentThread()
-
-    def getCurrentThread(self):
-        while True:
-            time.sleep(5)
-            # hasAlert = True
-            if len(threading.enumerate()) <= 2:
-                # hasAlert = False
-                QMessageBox.warning(self.centralwidget, "警告", "所有数据查询完毕", QMessageBox.Yes)
-                break
-
-    # def getPerson(self, cookie, listData, length):
-    #     personList = getPersonInfo(cookie, listData)
-    #     for item in personList:
-    #         self.tableWidget.setItem(item['index'], 5, QTableWidgetItem(item['person']))
-    #     i = ((len(listData) / length) * 10000)
-    #     if i % 10 < 5 :
-    #         value = self.progressBar.value() + i//100 + 1
-    #         if value > 90:
-    #             value = 100
-    #     else:
-    #         value = self.progressBar.value() + i//100
-    #         if value > 90:
-    #             value = 100
-    #     self.progressBar.setProperty("value", value)
-    #     print('w',len(listData),length,value)
 
     def exportExcel(self):
         rowNum = self.tableWidget.rowCount()
