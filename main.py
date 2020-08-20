@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from model.ExcelParam import ExcelParam
 from service.country import getCountryInfo
+from service.excel import createSheet, writeSheet
 from service.login import login
 from service.search import executeSearch, writeExcel, getPersonInfo
 
@@ -130,7 +131,7 @@ class Ui_IndexWindow(object):
             MainWindow.close()
         else:
             msg_box = QtWidgets.QMessageBox
-            msg_box.warning(self.centralwidget, "警告", "用户名或密码错误！", msg_box.Yes)
+            msg_box.warning(self.centralwidget, "警告", "目标网站异常或者用户名/密码错误！", msg_box.Yes)
             self.lineEdit.setFocus()
 
 # 搜索算法
@@ -261,11 +262,11 @@ class Ui_ContainerWindow(object):
         self.statusbar = QtWidgets.QStatusBar(ContainerWindow)
         self.statusbar.setObjectName("statusbar")
         ContainerWindow.setStatusBar(self.statusbar)
-
-        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
-        self.progressBar.setGeometry(QtCore.QRect(1050, 530, 118, 51))
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setObjectName("progressBar")
+        #
+        # self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
+        # self.progressBar.setGeometry(QtCore.QRect(1050, 530, 118, 51))
+        # self.progressBar.setProperty("value", 0)
+        # self.progressBar.setObjectName("progressBar")
 
         ## 自定义逻辑
         self.pushButton_3.clicked.connect(self.logout)
@@ -317,51 +318,65 @@ class Ui_ContainerWindow(object):
         global REQUEST_COOKIE
         self.progressBar.setProperty("value", 0)
         listData = executeSearch(searchKey, countryCode, REQUEST_COOKIE)
-        if len(listData) == 0:
+        if len(listData) <= 0:
             QMessageBox.warning(self.centralwidget, "警告", "该关键词查询不到数据,请更换关键词后再试!", QMessageBox.Yes)
             return
-        self.tableWidget.setRowCount(len(listData))
+        # 开始获取联系人 10条数据为一组
+        # 取10条数据，暂停1秒
+        loopNum = len(listData)//10 + 1
+        fileName = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_kjs.xls"
+        print("生成的地址:", fileName)
+        resList = []
+        createSheet(fileName)
+        for i in range(loopNum):
+            itemList = getPersonInfo(REQUEST_COOKIE,listData[i * 10: (i+1)*10])
+            writeSheet(itemList, fileName)
+            resList.extend(itemList)
+            time.sleep(1)
 
-        for i in range(len(listData)):
+        self.tableWidget.setRowCount(len(resList))
+
+        for i in range(len(resList)):
             self.tableWidget.setItem(i, 0, QTableWidgetItem(str(i+1)))
-            self.tableWidget.setItem(i, 1, QTableWidgetItem(listData[i].country))
-            self.tableWidget.setItem(i, 2, QTableWidgetItem(listData[i].company))
-            self.tableWidget.setItem(i, 3, QTableWidgetItem(listData[i].domain))
-            self.tableWidget.setItem(i, 4, QTableWidgetItem(listData[i].sale))
-            self.tableWidget.setItem(i, 5, QTableWidgetItem(listData[i].person))
-            self.tableWidget.setItem(i, 6, QTableWidgetItem(listData[i].phone))
-            self.tableWidget.setItem(i, 7, QTableWidgetItem(listData[i].address))
+            self.tableWidget.setItem(i, 1, QTableWidgetItem(resList[i].country))
+            self.tableWidget.setItem(i, 2, QTableWidgetItem(resList[i].company))
+            self.tableWidget.setItem(i, 3, QTableWidgetItem(resList[i].domain))
+            self.tableWidget.setItem(i, 4, QTableWidgetItem(resList[i].sale))
+            self.tableWidget.setItem(i, 5, QTableWidgetItem(resList[i].person))
+            self.tableWidget.setItem(i, 6, QTableWidgetItem(resList[i].phone))
+            self.tableWidget.setItem(i, 7, QTableWidgetItem(resList[i].address))
 
-        # 分三个线程去显示数据
-        # 第一次显示10个
-        # 如果所有数据大于20 第二次显示所有数据减10除以2 否则就直接显示剩余的
-        # 第三次显示剩余
 
-        if len(listData) > 10:
-            try:
-                t1 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[:10], len(listData)))
-                t1.start()
-                if len(listData) < 20:
-                    t2 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:], len(listData)))
-                    t2.start()
-                else:
-                    second = (len(listData) - 10) // 2 + 10
-                    t3 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:second],len(listData)))
-                    t4 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[second:], len(listData)))
-                    t3.start()
-                    t4.start()
-            except:
-                print("Error: 无法启动线程")
-                _thread.exit()
-            print("开始获取联系人1")
-        else:
-            try:
-                t5 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData, len(listData)))
-                t5.start()
-            except:
-                print("Error: 无法启动线程")
-                _thread.exit()
-            print("开始获取联系人2")
+        # # 分三个线程去显示数据
+        # # 第一次显示10个
+        # # 如果所有数据大于20 第二次显示所有数据减10除以2 否则就直接显示剩余的
+        # # 第三次显示剩余
+        #
+        # if len(listData) > 10:
+        #     try:
+        #         t1 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[:10], len(listData)))
+        #         t1.start()
+        #         if len(listData) < 20:
+        #             t2 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:], len(listData)))
+        #             t2.start()
+        #         else:
+        #             second = (len(listData) - 10) // 2 + 10
+        #             t3 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[10:second],len(listData)))
+        #             t4 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData[second:], len(listData)))
+        #             t3.start()
+        #             t4.start()
+        #     except:
+        #         print("Error: 无法启动线程")
+        #         _thread.exit()
+        #     print("开始获取联系人1")
+        # else:
+        #     try:
+        #         t5 = threading.Thread(target=self.getPerson, args=(REQUEST_COOKIE, listData, len(listData)))
+        #         t5.start()
+        #     except:
+        #         print("Error: 无法启动线程")
+        #         _thread.exit()
+        #     print("开始获取联系人2")
         # t6 = threading.Thread(target=self.getCurrentThread, args=())
         #
         # t6.start()

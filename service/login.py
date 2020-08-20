@@ -7,17 +7,22 @@ from bs4 import BeautifulSoup
 
 def openIndex2Cookie():  # 打开首页拿到cooke
     session = requests.session()
-    resBody = session.get("https://vip.lsmaps.com/Common/Login")
-    indexCookie = requests.utils.dict_from_cookiejar(session.cookies)
-    if len(indexCookie) < 1:
-        raise Exception('打开跨境搜页面失败,请稍后再试！')
+    resBody = session.get("https://vip.lsmaps.com/Common/Login?ReturnUrl=%2f")
+    # indexCookie = requests.utils.dict_from_cookiejar(session.cookies)
+    # print(indexCookie)
+    # if len(indexCookie) < 1:
+    #     raise Exception('打开跨境搜页面失败,请稍后再试！')
     body = resBody.text
+    # print(body)
     soup = BeautifulSoup(body, 'html.parser')
-    token = soup.find('input', {'name': '__RequestVerificationToken'}).get('value')
-    return indexCookie, token
+    try:
+        token = soup.find('input', {'name': 'tboxToken'}).get('value')
+    except:
+        return ""
+    return token
 
 
-def getLoginInfo(tboxAccount, tboxPassword, token, cookie):
+def getLoginInfo(tboxAccount, tboxPassword, token):
     ua = UserAgent()
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -27,23 +32,24 @@ def getLoginInfo(tboxAccount, tboxPassword, token, cookie):
         'Referer': 'https://www.baidu.com',
         'User-Agent': ua.random,
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': cookie,
+        # 'Cookie': cookie,
     }
 
     url = "http://vip.lsmaps.com/Common/CheckLogin"
     requestParam = {
         'tboxAccount': tboxAccount,
         'tboxPassword': tboxPassword,
-        '__RequestVerificationToken': token,
+        'tboxToken': token,
     }
     session = requests.session()
     resBody = session.post(url, requestParam, headers=headers)
     # print(resBody)
     # print(resBody.text)
     newCookie = requests.utils.dict_from_cookiejar(session.cookies)
+    cookie = ""
     if newCookie:
         for i in newCookie:
-            cookie = cookie + '; ' + i + '=' + newCookie[i]
+            cookie = cookie + i + '=' + newCookie[i] + '; '
         print(cookie)
         return cookie
     else:
@@ -52,11 +58,8 @@ def getLoginInfo(tboxAccount, tboxPassword, token, cookie):
 
 
 def login(name, password):
-    indexCookie, token = openIndex2Cookie()
-    sumCookie = ''
-    for i in indexCookie:
-        if len(sumCookie) > 0:
-            sumCookie = sumCookie + ';'
-        sumCookie = sumCookie + i + '=' + indexCookie[i]
-    req_cookie = getLoginInfo(name, password, token, sumCookie)
+    token = openIndex2Cookie()
+    if len(token) < 1:
+        return ""
+    req_cookie = getLoginInfo(name, password, token)
     return req_cookie

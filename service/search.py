@@ -49,29 +49,24 @@ def getPersonInfo(cookie, list):
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': cookie,
     }
-    personList = []
     for item in list:
         detailHtml = requests.get(url + item.dnbNumber, headers=headers)
         detailHtml.encoding = 'utf-8'
         reg = re.search(r'"fullName":.*', detailHtml.text)
         person = '--'
-        personItem = {}
         try:
             if len(reg.group(0)) > 0:
                 person = reg.group(0).split(":")[1]
                 person = person.strip(" ").strip("\"").replace('\"', '').replace(",", "")
+
         except Exception as e:
             print(e)
-        personItem['index'] = item.id
-        personItem['person'] = person
-        personList.append(personItem)
-
-    return personList
-
+        item.person = person
+    return list
 def writeExcel(list, fileName):
     wb = xlwt.Workbook()
     # 添加一个表
-    ws = wb.add_sheet('sheet1')
+    ws = wb.get_sheet('sheet1')
     # 添加标题
     ws.write(0, 0, '序号')
     ws.write(0, 1, '国家')
