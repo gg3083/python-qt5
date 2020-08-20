@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
-import os
+import os, sys
 
 import xlrd
 import xlwt
@@ -13,7 +13,13 @@ from model.ExcelParam import ExcelParam
 def createSheet(fileName):
     exists = os.path.exists( fileName)
     if not exists:
-        workbook = xlrd.open_workbook(r'./template.xlsx')
+        if getattr(sys, 'frozen', False):
+            application_path = os.path.dirname(sys.executable)
+        elif __file__:
+            application_path = os.path.dirname(__file__)
+        templatePath = os.path.join(application_path, '../template.xlsx')
+        print(templatePath)
+        workbook = xlrd.open_workbook(templatePath)
         sheet1 = workbook.sheet_by_name('Sheet1')
         wb = xlwt.Workbook()
         ws = wb.add_sheet('Sheet1')
