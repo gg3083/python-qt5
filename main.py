@@ -316,7 +316,8 @@ class Ui_ContainerWindow(object):
             return
         countryCode = country.split("—")[2]
         global REQUEST_COOKIE
-        self.progressBar.setProperty("value", 0)
+        # self.progressBar.setProperty("value", 0)
+
         listData = executeSearch(searchKey, countryCode, REQUEST_COOKIE)
         if len(listData) <= 0:
             QMessageBox.warning(self.centralwidget, "警告", "该关键词查询不到数据,请更换关键词后再试!", QMessageBox.Yes)
@@ -391,21 +392,21 @@ class Ui_ContainerWindow(object):
                 QMessageBox.warning(self.centralwidget, "警告", "所有数据查询完毕", QMessageBox.Yes)
                 break
 
-    def getPerson(self, cookie, listData, length):
-        personList = getPersonInfo(cookie, listData)
-        for item in personList:
-            self.tableWidget.setItem(item['index'], 5, QTableWidgetItem(item['person']))
-        i = ((len(listData) / length) * 10000)
-        if i % 10 < 5 :
-            value = self.progressBar.value() + i//100 + 1
-            if value > 90:
-                value = 100
-        else:
-            value = self.progressBar.value() + i//100
-            if value > 90:
-                value = 100
-        self.progressBar.setProperty("value", value)
-        print('w',len(listData),length,value)
+    # def getPerson(self, cookie, listData, length):
+    #     personList = getPersonInfo(cookie, listData)
+    #     for item in personList:
+    #         self.tableWidget.setItem(item['index'], 5, QTableWidgetItem(item['person']))
+    #     i = ((len(listData) / length) * 10000)
+    #     if i % 10 < 5 :
+    #         value = self.progressBar.value() + i//100 + 1
+    #         if value > 90:
+    #             value = 100
+    #     else:
+    #         value = self.progressBar.value() + i//100
+    #         if value > 90:
+    #             value = 100
+    #     self.progressBar.setProperty("value", value)
+    #     print('w',len(listData),length,value)
 
     def exportExcel(self):
         rowNum = self.tableWidget.rowCount()
