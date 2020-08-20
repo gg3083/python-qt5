@@ -349,6 +349,7 @@ class Ui_ContainerWindow(object):
 
     def exportExcel(self):
         rowNum = self.tableWidget.rowCount()
+        print(rowNum)
         if rowNum <= 0:
             QMessageBox.warning(self.centralwidget, "警告", "表格中没有数据,无法导出！", QMessageBox.Yes)
             return
@@ -371,7 +372,7 @@ class Ui_ContainerWindow(object):
         fileName = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_kjs.xls"
         file_path, ok = QFileDialog.getSaveFileName(self.centralwidget, "save file", fileName, os.path.expanduser('~'))
         if ok:
-            writeExcel(excelList, file_path[0])
+            writeExcel(excelList, file_path)
         else:
             QMessageBox.warning(self.centralwidget, "警告", "取消导出！", QMessageBox.Yes)
 

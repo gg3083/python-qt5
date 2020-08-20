@@ -63,10 +63,11 @@ def getPersonInfo(cookie, list):
             print(e)
         item.person = person
     return list
+
 def writeExcel(list, fileName):
     wb = xlwt.Workbook()
     # 添加一个表
-    ws = wb.get_sheet('sheet1')
+    ws = wb.add_sheet('sheet1')
     # 添加标题
     ws.write(0, 0, '序号')
     ws.write(0, 1, '国家')
